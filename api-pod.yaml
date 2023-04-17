@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kompose.cmd: kompose --file docker-compose.prod.yml convert
+    kompose.version: 1.28.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.network/ehmrs-default: "true"
+    io.kompose.service: api
+  name: api
+spec:
+  containers:
+    - args:
+        - npm
+        - run
+        - start
+      env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: DB_HOST
+              name: server--env
+        - name: DB_MONGO
+          valueFrom:
+            configMapKeyRef:
+              key: DB_MONGO
+              name: server--env
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: DB_NAME
+              name: server--env
+        - name: DB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              key: DB_PASSWORD
+              name: server--env
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              key: DB_USER
+              name: server--env
+        - name: JWT_SECRET
+          valueFrom:
+            configMapKeyRef:
+              key: JWT_SECRET
+              name: server--env
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              key: NODE_ENV
+              name: server--env
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              key: PORT
+              name: server--env
+      image: ehrmscontainerregistry.azurecr.io/api
+      name: api
+      ports:
+        - containerPort: 4050
+      resources: {}
+      volumeMounts:
+        - mountPath: /app
+          name: share-data
+  restartPolicy: OnFailure
+  volumes:
+    - name: share-data
+      persistentVolumeClaim:
+        claimName: share-data
+status: {}

@@ -1,0 +1,96 @@
+version: '3.4'
+services:
+  postgres:
+    image: postgres:14.1-alpine
+    container_name: postgres
+    logging:
+      driver: none
+    environment:
+      POSTGRES_DB: '${DB_NAME}'
+      POSTGRES_USER: '${DB_USER}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+    ports:
+      - '5432:5432'
+    expose:
+      - 5432
+    volumes:
+      - 'sailpsql:/var/lib/postgresql/data'
+    networks:
+      - sail
+    restart: always
+  api:
+    image: ehrmscontainerregistry.azurecr.io/api
+    build:
+      context: ./server
+    container_name: api
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+    ports:
+      - 4050:4050
+    expose:
+      - 4050
+    env_file:
+      - server/.env
+    links:
+      - postgres
+    depends_on:
+      - postgres
+
+    volumes:
+      - './server:/app'
+      - '/app/node_modules'
+    networks:
+      - sail
+    restart: always
+    command: npm run dev
+  web:
+    build:
+      context: ./client
+    container_name: web
+    working_dir: /web
+    environment:
+      NODE_ENV: development
+    ports:
+      - 8082:8080
+    expose:
+      - 8082
+    links:
+      - api
+
+      - postgres
+    depends_on:
+      - api
+      - postgres
+
+    volumes:
+      - './client:/web'
+      - '/web/node_modules'
+    networks:
+      - sail
+    restart: always
+    command: npm run serve
+
+  nginx:
+    image: ehrmscontainerregistry.azurecr.io/nginx
+    build:
+      context: ./nginx
+    container_name: nginx
+    depends_on:
+      - api
+    networks:
+      - sail
+    ports:
+      - '80:80'
+
+volumes:
+  sailpsql:
+    driver: local
+  sailmongo:
+    driver: local
+  config-omnidb:
+    driver: local
+
+networks:
+  sail:
+    driver: bridge

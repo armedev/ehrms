@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kompose.cmd: kompose --file docker-compose.prod.yml convert
+    kompose.version: 1.28.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.network/ehmrs-default: "true"
+    io.kompose.service: postgres
+  name: postgres
+spec:
+  containers:
+    - env:
+        - name: POSTGRES_DB
+          value: ${DB_NAME}
+        - name: POSTGRES_PASSWORD
+          value: ${DB_PASSWORD}
+      image: registry.hub.docker.com/library/postgres:14.1-alpine
+      name: postgres
+      ports:
+        - containerPort: 5432
+      resources: {}
+      volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: share-data-psql
+  restartPolicy: OnFailure
+  volumes:
+    - name: share-data-psql
+      persistentVolumeClaim:
+        claimName: share-data-psql
+status: {}

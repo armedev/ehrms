@@ -1,0 +1,46 @@
+version: '3.4'
+
+services:
+  postgres:
+    image: registry.hub.docker.com/library/postgres:14.1-alpine
+    environment:
+      POSTGRES_DB: '${DB_NAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+    ports:
+      - '5432:5432'
+    volumes:
+      - 'share-data-psql:/var/lib/postgresql/data'
+    deploy:
+      restart_policy:
+        condition: on-failure
+  api:
+    image: ehrmscontainerregistry.azurecr.io/api
+    ports:
+      - '4050'
+    env_file:
+      - server/.env
+    volumes:
+      - 'share-data:/app'
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command: 'npm run start'
+
+  nginx:
+    image: ehrmscontainerregistry.azurecr.io/nginx
+    # domainame: ehrmsdemo
+    ports:
+      - '80:80'
+
+volumes:
+  share-data:
+    driver: azure_file
+    driver_opts:
+      share_name: ehrms-data-volume2
+      storage_account_name: ehrmsstorageaccount
+
+  share-data-psql:
+    driver: azure_file
+    driver_opts:
+      share_name: ehrms-data-volume-psql
+      storage_account_name: ehrmsstorageaccount

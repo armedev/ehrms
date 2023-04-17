@@ -1,0 +1,22 @@
+version: '3.4'
+
+services:
+  postgres:
+    image: registry.hub.docker.com/library/postgres:14.1-alpine
+    environment:
+      POSTGRES_DB: '${DB_NAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+    ports:
+      - '5432:5432'
+    volumes:
+      - 'share-data-psql:/var/lib/postgresql/data'
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  share-data-psql:
+    driver: azure_file
+    driver_opts:
+      share_name: ehrms-data-volume-psql
+      storage_account_name: ehrmsstorageaccount
